@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+	   <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+		<script src="js/echarts.js"></script>
+		<script src="js/echarts.common.js"></script>
+   </head>
+   <body style="height: 100%; margin: 0">
+       <div id="container" style="height: 100%"></div>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+	   
+       <script type="text/javascript">
+var dom = document.getElementById("container");
+var myChart = echarts.init(dom);
+var app = {};
+option = null;
+myChart.showLoading();
+
+let datav_geo = 'bound/';
+var mapdata = {};
+
+//初始化全国地图
+$.get(datav_geo + '100000_full.json', function (geoJson) {
+
+    myChart.hideLoading();
+    
+    //console.log(geoJson)
+    //console.log(mapdata)
+    //echarts.registerMap('China', geoJson);
+
+	renderMap('China',geoJson);
+});
+
+//地图点击事件
+// 双击： dblclick  、 单击： click
+myChart.on('click', function (params) {
+	//console.log( params );
+	
+	if (mapdata[params.name].substr(4)=="00"){
+		$.getJSON(datav_geo + mapdata[params.name] +'_full.json', function(geoJson){
+			//console.log(geoJson)
+			renderMap(params.name,geoJson);
+		});
+	} else {
+		$.getJSON(datav_geo + '100000_full.json', function(geoJson){
+			//console.log(geoJson)
+			renderMap('China',geoJson);
+		});
+	}
+	
+});
+
+//初始化绘制全国地图配置
+var option = {
+        title: {
+            text: '',
+            subtext: '',
+            sublink: ''
+        },
+		toolbox: {
+			show: true,
+			orient: 'vertical',
+			left: 'right',
+			top: 'center',
+			feature: {
+				dataView: {readOnly: false},
+				restore: {},
+				saveAsImage: {}
+			},
+			iconStyle:{
+				normal:{
+					color:'#fff'
+				}
+			}
+		},
+        nameMap:{
+		    'China':'中国'
+		},
+        //selectedMode: true
+    }
+
+function renderMap(map,geoJson){
+	echarts.registerMap( map, geoJson);
+		
+	var data = [];
+	for( var i=0;i<geoJson.features.length;i++ ){
+	    mapdata[geoJson.features[i].properties.name] = geoJson.features[i].properties.adcode + ""
+		data.push({
+			name:geoJson.features[i].properties.name
+		})
+	}
+		
+	//console.log(data)
+	//option.title.subtext = map;
+	
+	option.tooltip = {
+			trigger: 'item',
+			formatter: '地点：{b}<br>成交订单金额：￥19283万<br>成交订单量订单：9891282<br>商品销售数量：589121<br /><br />热销商品<br />纯净水、脉动<br /><br />用户画像<br />女性、白领、运动、微博'
+	};
+	
+	option.series = [{
+            name: map,
+            type: 'map',
+            mapType: map,
+            roam: false,
+            label: {
+	            normal:{
+					show:true,
+					textStyle:{
+						color:'#999',
+						fontSize:11
+					}  
+	            },
+	            emphasis: {
+	                show: true,
+	                textStyle:{
+						color:'#fff',
+						fontSize:11
+					}
+	            }
+	        },
+	        itemStyle: {
+                normal:{label:{show:true}},
+                emphasis:{label:{show:true}}
+	        },
+            data:data
+	        
+	}
+	];
+    
+    //渲染地图
+    myChart.setOption(option);
+}
+/*
+if (option && typeof option === "object") {
+    myChart.setOption(option, true);
+} */
+       </script>
+   </body>
+</html>
